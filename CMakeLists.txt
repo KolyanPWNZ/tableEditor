@@ -1,70 +1,71 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.14)
 
 project(tableEditor VERSION 0.1 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+find_package(Qt5 REQUIRED COMPONENTS Core Widgets Xml)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
-
-set(PROJECT_SOURCES
-        main.cpp
-        mainwindow.cpp
-        mainwindow.h
-        mainwindow.ui
+set(SOURCES
+    main.cpp
+    mainwindow.cpp
+    tablemodel.cpp
+    delegates/numberdelegate.cpp
+    delegates/stringdelegate.cpp
+    delegates/datedelegate.cpp
+    delegates/booldelegate.cpp
+    parser/xmlparser.cpp
+    serializer/xmlserializer.cpp
 )
 
-if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(tableEditor
-        MANUAL_FINALIZATION
-        ${PROJECT_SOURCES}
-    )
-# Define target properties for Android with Qt 6 as:
-#    set_property(TARGET tableEditor APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
-#                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
-# For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
-else()
-    if(ANDROID)
-        add_library(tableEditor SHARED
-            ${PROJECT_SOURCES}
-        )
-# Define properties for Android with Qt 5 after find_package() calls as:
-#    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
-    else()
-        add_executable(tableEditor
-            ${PROJECT_SOURCES}
-        )
-    endif()
+set(HEADERS
+    mainwindow.h
+    tablemodel.h
+    delegates/numberdelegate.h
+    delegates/stringdelegate.h
+    delegates/datedelegate.h
+    delegates/booldelegate.h
+    parser/xmlparser.h
+    serializer/xmlserializer.h
+    columnTypeUtils.h
+    NaturelSort.h
+)
+
+set(FORMS
+    mainwindow.ui
+)
+
+add_executable(tableEditor
+    ${SOURCES}
+    ${HEADERS}
+    ${FORMS}
+)
+
+if(WIN32)
+    set_target_properties(tableEditor PROPERTIES WIN32_EXECUTABLE TRUE)
 endif()
 
-target_link_libraries(tableEditor PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
-
-# Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
-# If you are developing for iOS or macOS you should consider setting an
-# explicit, fixed bundle identifier manually though.
-if(${QT_VERSION} VERSION_LESS 6.1.0)
-  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.tableEditor)
-endif()
 set_target_properties(tableEditor PROPERTIES
-    ${BUNDLE_ID_OPTION}
+    MACOSX_BUNDLE TRUE
+    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.tableEditor
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
-    MACOSX_BUNDLE TRUE
-    WIN32_EXECUTABLE TRUE
+)
+
+target_link_libraries(tableEditor PRIVATE
+    Qt5::Core
+    Qt5::Widgets
+    Qt5::Xml
 )
 
 include(GNUInstallDirs)
+
 install(TARGETS tableEditor
     BUNDLE DESTINATION .
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
-
-if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(tableEditor)
-endif()
